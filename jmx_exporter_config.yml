@@ -1,0 +1,3 @@
+hostPort: broker:9092
+rules:
+  - pattern: ".*"

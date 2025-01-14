@@ -82,6 +82,20 @@ services:
       SPARK_WORKER_CORES: 2
       SPARK_WORKER_MEMORY: 1g
       SPARK_MASTER_URL: spark://spark-master:7077
+      
+
+  jmx-exporter:
+    image: bitnami/jmx-exporter:latest
+    container_name: jmx-exporter
+    ports:
+      - "8080:8080"
+    environment:
+      KAFKA_OPTS: -javaagent:/opt/jmx_exporter/jmx_prometheus_javaagent.jar=8080:/etc/jmx_exporter/config.yml
+    volumes:
+      - ./jmx_exporter_config.yml:/etc/jmx_exporter/config.yml
+    depends_on:
+      - broker
+
 
   prometheus:
     image: prom/prometheus:latest
@@ -93,8 +107,9 @@ services:
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
     depends_on:
-      - broker
+      - jmx-exporter
 
+      
   grafana:
     image: grafana/grafana:latest
     container_name: grafana
