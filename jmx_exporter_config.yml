@@ -1,3 +1,41 @@
 hostPort: broker:9092
 rules:
   - pattern: ".*"
+# ---
+# hostPort: broker:9092 
+# lowercaseOutputName: true
+# lowercaseOutputLabelNames: true
+# rules:
+#   # Broker metrics
+#   - pattern: kafka.server<type=(.+), name=(.+), topic=(.+), partition=(.*)><>Value
+#     name: kafka_server_$1_$2
+#     labels:
+#       topic: "$3"
+#       partition: "$4"
+#     type: GAUGE # or COUNTER depending on the metric
+  
+#   # Consumer metrics
+#   - pattern: kafka.consumer<type=(.+), name=(.+), clientId=(.+), topic=(.+), partition=(.*)><>Value
+#     name: kafka_consumer_$1_$2
+#     labels:
+#       clientId: "$3"
+#       topic: "$4"
+#       partition: "$5"
+#     type: GAUGE # or COUNTER depending on the metric
+
+#   # Producer metrics
+#   - pattern: kafka.producer<type=(.+), name=(.+), clientId=(.+), topic=(.+), partition=(.*)><>Value
+#     name: kafka_producer_$1_$2
+#     labels:
+#       clientId: "$3"
+#       topic: "$4"
+#       partition: "$5"
+#     type: GAUGE # or COUNTER depending on the metric
+
+#   # General Kafka metrics
+#   - pattern: kafka.network<type=(.+), name=(.+), request=(.+)><>Value
+#     name: kafka_network_$1_$2
+#     labels:
+#       request: "$3"
+#   - pattern: kafka.controller<type=(.+), name=(.+)><>Value
+#     name: kafka_controller_$1_$2

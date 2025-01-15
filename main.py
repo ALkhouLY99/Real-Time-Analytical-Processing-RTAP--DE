@@ -165,7 +165,7 @@ if __name__ == "__main__":
                 conn.commit()
 
         # pull data from source to insert into db & produce_to_kafka
-        for i in range(1000):
+        for i in range(1000000):
             voter_data = generate_voter_d()
             insert_voters_data(conn, cur, voter_data)
 

@@ -6,6 +6,7 @@ volumes:
   grafana_data:  # Persistent storage for Grafana
 
 services:
+
   zookeeper:
     image: confluentinc/cp-zookeeper:7.4.0
     hostname: zookeeper
