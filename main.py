@@ -108,11 +108,12 @@ def insert_voters_data(conn, curs, voter_data):
         """
         INSERT INTO voters (voter_id, voter_name, dob, gender, nationality, registration_number, address, email, phone_number, cell_number, picture, registered_age)
         VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        ON CONFLICT (voter_id) DO NOTHING
         """, (
             voter_data['voter_id'], voter_data['voter_name'],
             voter_data['dob'], voter_data['gender'],
             voter_data['nationality'], voter_data['registration_number'],
-            json.dumps(voter_data['address']), voter_data['email'],
+            json.dumps(voter_data['address']), voter_data['email'],        ## json.dumps()
             voter_data['phone_number'], voter_data['cell_number'],
             voter_data['picture'], voter_data['registered_age']
         )
@@ -133,7 +134,8 @@ voters_topic = "voters_topic"
 producer = SerializingProducer({
     'bootstrap.servers': 'localhost:9092',
     'key.serializer': lambda k, ctx: str(k).encode('utf-8'),
-    'value.serializer': lambda v, ctx: json.dumps(v).encode('utf-8')
+    'value.serializer': lambda v, ctx: json.dumps(v).encode('utf-8'),
+     'enable.idempotence': True                     # Enable idempotence
 })
 
 # main:-Entry_point

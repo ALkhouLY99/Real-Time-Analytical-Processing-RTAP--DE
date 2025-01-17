@@ -28,7 +28,8 @@ consumer = Consumer(
 producer = SerializingProducer(
     { **confg,
     'key.serializer': lambda k, ctx: str(k).encode('utf-8'),
-    'value.serializer': lambda v, ctx: json.dumps(v).encode('utf-8')
+    'value.serializer': lambda v, ctx: json.dumps(v).encode('utf-8'),
+     'enable.idempotence': True                                            # Enable idempotence
     })
 
 if __name__ == "__main__":
@@ -82,6 +83,7 @@ if __name__ == "__main__":
                             """
                             insert into votes(voter_id,candi_id,voting_time)
                             values(%s,%s,%s)
+                            ON CONFLICT (voter_id) DO NOTHING
                             """,
                                 (voting['voter_id'],voting['candi_id'],voting['voting_time'])            
                             )
@@ -95,8 +97,8 @@ if __name__ == "__main__":
                             value = voting,
                             on_delivery = delivery_report
                             )
-
-                        producer.poll(0)
+                            # Call poll to handle delivery reports
+                        producer.poll(0)          # Non-blocking call to process delivery reports
                         print(f'Produced voter , data: {voting}\n')
                     except Exception as e:
                         logging.error(f"An error occurred while processing the vote: {e}")
