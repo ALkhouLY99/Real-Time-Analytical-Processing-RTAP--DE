@@ -1,12 +1,11 @@
+import os
+import shutil
 import pyspark
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import *
-from pyspark.sql.functions import sum as _sum
-from pyspark.sql.types import StructType, StructField, StringType, IntegerType, MapType,TimestampType
+from pyspark.sql.types import StructType, StructField, StringType, IntegerType, MapType, TimestampType
 
-
-
-# spark set-up settings
+# Spark set-up settings
 spark = SparkSession.builder \
     .appName("KafkaSparkIntegration") \
     .master("local[*]") \
@@ -14,77 +13,93 @@ spark = SparkSession.builder \
     .config("spark.sql.adaptive.enable", "false") \
     .getOrCreate()
 
-
-
+# Function to clear contents of a checkpoint directory
+def clear_checkpoint_directory(checkpoint_dir):
+    if os.path.exists(checkpoint_dir):
+        for filename in os.listdir(checkpoint_dir):
+            file_path = os.path.join(checkpoint_dir, filename)
+            try:
+                if os.path.isfile(file_path):
+                    os.remove(file_path)  # Remove file
+                elif os.path.isdir(file_path):
+                    shutil.rmtree(file_path)  # Remove directory
+            except Exception as e:
+                print(f"Error deleting {file_path}: {e}")
+        print(f"Contents of checkpoint directory {checkpoint_dir} removed.")
+    else:
+        print("Checkpoint directory does not exist.")
 
 if __name__ == "__main__":
-    # print(pyspark.__version__)
-    # print("Spark Version:", spark.version)
-    # print("Application Name:", spark.sparkContext.appName)
-
     schema = StructType([
-        StructField("voter_id",StringType(),False),
-        StructField("voter_name",StringType(),True),
-        StructField("candi_id",StringType(),True),
-        StructField("candi_name",StringType(),True),
-        StructField("voting_time",TimestampType(),True),
-
-        StructField("party_affiliation",StringType(),True),
-        StructField("bio",StringType(),True),
-        StructField("campaign_platform",StringType(),True),
-        StructField("photo_url",StringType(),True),
-
-
-        StructField("dob",StringType(),True),
-        StructField("gender",StringType(),True),
-        StructField("nationality",StringType(),True),
-        StructField("registration_number",StringType(),True),
-        StructField("address",MapType(StringType(), StringType()),True),
-        StructField("email",StringType(),True),
-        StructField("phone_number",StringType(),True),
-        StructField("cell_number",StringType(),True),
-        StructField("picture",StringType(),True),
-        StructField("registered_age",IntegerType(),True),
-        StructField("vote",IntegerType(),True)
+        StructField("voter_id", StringType(), False),
+        StructField("voter_name", StringType(), True),
+        StructField("candi_id", StringType(), True),
+        StructField("candi_name", StringType(), True),
+        StructField("voting_time", TimestampType(), True),
+        StructField("party_affiliation", StringType(), True),
+        StructField("bio", StringType(), True),
+        StructField("campaign_platform", StringType(), True),
+        StructField("photo_url", StringType(), True),
+        StructField("dob", StringType(), True),
+        StructField("gender", StringType(), True),
+        StructField("nationality", StringType(), True),
+        StructField("registration_number", StringType(), True),
+        StructField("address", MapType(StringType(), StringType()), True),
+        StructField("email", StringType(), True),
+        StructField("phone_number", StringType(), True),
+        StructField("cell_number", StringType(), True),
+        StructField("picture", StringType(), True),
+        StructField("registered_age", IntegerType(), True),
+        StructField("vote", IntegerType(), True)
     ])
 
-    
-
     voting_df = spark.readStream \
-        .format('kafka')\
+        .format('kafka') \
         .option("kafka.bootstrap.servers", "localhost:9092") \
         .option("subscribe", "votes_topic") \
-        .load()\
-        .selectExpr("CAST(value AS STRING)")\
+        .load() \
+        .selectExpr("CAST(value AS STRING)") \
         .select(from_json(col("value"), schema).alias("data")) \
         .select("data.*")
 
-    ## to see schema 
-    # voting_df.printSchema()
-    # print("voting_df variable:")
-    # print(voting_df)
+    # Watermarking
+    watermark_ebriched = voting_df.withWatermark("voting_time", "1 minutes")
 
-    # query = voting_df.writeStream\
-    #     .outputMode("append")\
-    #     .format("console")\
-    #     .start()
-    # query.awaitTermination()
+    # Aggregations
+    votres_per_candi = watermark_ebriched.groupby("candi_id", "candi_name", "party_affiliation", "photo_url") \
+        .agg(sum("vote").alias("Total_Votes"))
 
-    ## enricded_w_watermark
-    watermark_ebriched = voting_df.withWatermark("voting_time","1 minutes")
+    trunout_loc_state = watermark_ebriched.groupby(col("address").getItem("state")) \
+        .agg(count("*").alias("vote_count"))
 
-    ## AGG_measures
-    votres_per_candi = watermark_ebriched.groupby("candi_id","candi_name","party_affiliation")\
-                                                .agg(_sum("vote").alias("Total_Votes"))
-    trunout_by_ loc-state = watermark_ebriched.groupby(col("address").gitItem("state"))\
-                                                .agg(count("*").alias("vote_count"))
+    # Write to Kafka
+    p_votres_per_candi_to_kafka = votres_per_candi.select(to_json(struct("*")).alias("value")) \
+        .writeStream \
+        .format("kafka") \
+        .option("kafka.bootstrap.servers", "localhost:9092") \
+        .option("topic", "agg_totalvotes") \
+        .option("checkpointLocation", "/workspaces/Voting-System-DE/checkpoints/cp1") \
+        .outputMode('update') \
+        .start()
 
-    ## Write the output to the console
-    # query = votres_per_candi.writeStream \
-    #     .outputMode("update") \
-    #     .format("console") \
-    #     .start()
+    p_trunout_loc_state_to_kafka = trunout_loc_state.selectExpr("to_json(struct(*)) AS value") \
+        .writeStream \
+        .format("kafka") \
+        .option("kafka.bootstrap.servers", "localhost:9092") \
+        .option("topic", "agg_vote_count") \
+        .option("checkpointLocation", "/workspaces/Voting-System-DE/checkpoints/cp2") \
+        .outputMode('update') \
+        .start()
 
-    # Keep the application running
-    query.awaitTermination()
-
+    try:
+        # Start the streaming queries
+        p_votres_per_candi_to_kafka.awaitTermination()
+        # p_trunout_loc_state_to_kafka.awaitTermination()
+    except KeyboardInterrupt:
+        print("Streaming terminated by user.")
+    except Exception as e:
+        print(f"An error occurred: {e}")
+    finally:
+        # Clear the contents of the checkpoint directories
+        clear_checkpoint_directory("/workspaces/Voting-System-DE/checkpoints/cp1")
+        clear_checkpoint_directory("/workspaces/Voting-System-DE/checkpoints/cp2")
