@@ -94,12 +94,19 @@ if __name__ == "__main__":
     try:
         # Start the streaming queries
         p_votres_per_candi_to_kafka.awaitTermination()
-        # p_trunout_loc_state_to_kafka.awaitTermination()
+        p_trunout_loc_state_to_kafka.awaitTermination()
     except KeyboardInterrupt:
         print("Streaming terminated by user.")
     except Exception as e:
         print(f"An error occurred: {e}")
     finally:
+        # Stop the streaming queries gracefully
+        print("Stopping streaming queries...")
+        p_votres_per_candi_to_kafka.stop()
+        p_trunout_loc_state_to_kafka.stop()
+
         # Clear the contents of the checkpoint directories
+        print("Clearing checkpoint directories...")
         clear_checkpoint_directory("/workspaces/Voting-System-DE/checkpoints/cp1")
         clear_checkpoint_directory("/workspaces/Voting-System-DE/checkpoints/cp2")
+        print("Checkpoint directories cleared.")
