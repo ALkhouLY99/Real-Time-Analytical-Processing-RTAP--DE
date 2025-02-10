@@ -10,6 +10,22 @@ import psycopg2
 import matplotlib
 from matplotlib import colormaps
 import matplotlib.pyplot as plt
+import webbrowser
+import threading
+import os
+
+# browser_opened = False  # Flag to track if the browser is opened
+
+# def open_browser():
+#     global browser_opened
+#     time.sleep(3)  # Wait for Streamlit to start
+#     if not browser_opened:
+#         webbrowser.open("http://localhost:8501")
+#         browser_opened = True  # Mark browser as opened
+
+# # Run browser opener in a separate thread to prevent blocking
+# threading.Thread(target=open_browser, daemon=True).start()
+
 
 # Function to create a Kafka consumer
 def create_kafka_consumer(topic_name):
@@ -34,7 +50,7 @@ def fetch_data_from_kafka(consumer):
     return data
 
 # Function to fetch voting statistics from PostgreSQL database
-@st.cache_data(ttl=10)
+@st.cache_data(ttl=5)
 def fetch_voting_stats():
     # Connect to PostgreSQL database
     conn = psycopg2.connect("host=localhost dbname=voting user=postgres password=postgres")
@@ -268,107 +284,139 @@ def paginate_table(table_data):
 def update_data():
     # Placeholder to display last refresh time
     last_refresh = st.empty()
-    last_refresh.text(f"Last refreshed at: {time.strftime('%Y-%m-%d %H:%M:%S')}")
+    status_message = st.empty()  # Ensure it's defined before try-except
+    try:
+        last_refresh.text(f"Last refreshed at: {time.strftime('%Y-%m-%d %H:%M:%S')}")
 
-    # Fetch voting statistics
-    voters_count, candidates_count = fetch_voting_stats()
+        # Fetch voting statistics
+        voters_count, candidates_count = fetch_voting_stats()
 
-    # Display total voters and candidates metrics
-    st.markdown("<hr style='margin: 0; border: 1px solid #ffffff;' />",unsafe_allow_html=True)
-    col1, col2 = st.columns(2)
-    with col1:
-        st.markdown(
-                    f"""
-                    <div style='text-align:center; color: #ffff;'>
-                        <h3 style='margin: 0;'>Total Voters<br><strong>{voters_count}</strong></h3>
-                        <hr style='margin: 0; border: 1px solid #ffffff;' />
-                    </div>""",unsafe_allow_html=True)
+        # Display total voters and candidates metrics
+        st.markdown("<hr style='margin: 0; border: 1px solid #ffffff;' />",unsafe_allow_html=True)
+        col1, col2 = st.columns(2)
+        with col1:
+            st.markdown(
+                        f"""
+                        <div style='text-align:center; color: #ffff;'>
+                            <h3 style='margin: 0;'>Total Voters<br><strong>{voters_count}</strong></h3>
+                            <hr style='margin: 0; border: 1px solid #ffffff;' />
+                        </div>""",unsafe_allow_html=True)
+            # st.markdown("""---""")
+        with col2:
+            st.markdown(
+                            f"""
+                            <div style='text-align:center; color: #ffff;'>
+                                <h3 style='margin: 0;'>Total Voters<br><strong>{candidates_count}</strong></h3>
+                                <hr style='margin: 0; border: 1px solid #ffffff;' />
+                            </div>""",unsafe_allow_html=True)
+
+        # Show waiting message before fetching data
+        # st.info("⏳ Waiting for data processing...")
+
+        #    st.markdown("""---""")
+        # Fetch data from Kafka on aggregated votes per candidate
+        consumer = create_kafka_consumer("agg_totalvotes")
+        data = fetch_data_from_kafka(consumer)
+        results = pd.DataFrame(data)
+
+
+        # Check if results are empty
+        # if results.empty:
+        #     st.warning("⚠ No data available. Waiting for votes to be processed...")
+        #     return
+
+        # # Check if 'candi_id' column exists before grouping
+        # if 'candi_id' not in results.columns:
+        #     st.error("❌ Data error: Missing 'candi_id' column. Please check your database.")
+        #     return
+
+        # # Show message before processing leading candidate
+        # st.info("🔍 Processing votes to find the leading candidate...")
+
+
+        # Identify the leading candidate
+        results = results.loc[results.groupby('candi_id')['Total_Votes'].idxmax()]
+        leading_candidate = results.loc[results['Total_Votes'].idxmax()]
+
+        # Display leading candidate information
         # st.markdown("""---""")
-    with col2:
-       st.markdown(
-                    f"""
-                    <div style='text-align:center; color: #ffff;'>
-                        <h3 style='margin: 0;'>Total Voters<br><strong>{candidates_count}</strong></h3>
-                        <hr style='margin: 0; border: 1px solid #ffffff;' />
-                    </div>""",unsafe_allow_html=True)
-    #    st.markdown("""---""")
-    # Fetch data from Kafka on aggregated votes per candidate
-    consumer = create_kafka_consumer("agg_totalvotes")
-    data = fetch_data_from_kafka(consumer)
-    results = pd.DataFrame(data)
+        st.markdown("<h1 style='text-align: center;'>Leading Candidate</h1>", unsafe_allow_html=True)
+        # st.header('Leading Candidate')
+        col1, col2 = st.columns(2)
+        with col1:
+            # st.image(leading_candidate['photo_url'], width=200)
+            st.image(leading_candidate['photo_url'], width=220, caption=f"{leading_candidate['candi_name']}")
 
-    # Identify the leading candidate
-    results = results.loc[results.groupby('candi_id')['Total_Votes'].idxmax()]
-    leading_candidate = results.loc[results['Total_Votes'].idxmax()]
+        with col2:
+            st.markdown("<h2 style='text-align: center; color: #FFFF; margin: 0;'>Candidate Name</h2>",unsafe_allow_html=True)
+            st.markdown(f"<h3 style='text-align: center; color: #FFFF; margin: 0;'><strong>{leading_candidate['candi_name']}</strong></h3>",unsafe_allow_html=True)
+            st.markdown(f"<h3 style='text-align: center; color: #FFFF;'>The Leading Party<br><strong>{leading_candidate['party_affiliation']}</strong></h3>",unsafe_allow_html=True)        # st.subheader(f"The Leading Party:\n{leading_candidate['party_affiliation']}")
+            st.markdown(f"<h4 style='text-align: center; color: #FFF15;'>Total Votes:<br><strong>{leading_candidate['Total_Votes']}</strong></h4>",unsafe_allow_html=True)        # st.subheader(f"Total Vote: {leading_candidate['Total_Votes']}")
 
-    # Display leading candidate information
-    # st.markdown("""---""")
-    st.markdown("<h1 style='text-align: center;'>Leading Candidate</h1>", unsafe_allow_html=True)
-    # st.header('Leading Candidate')
-    col1, col2 = st.columns(2)
-    with col1:
-        # st.image(leading_candidate['photo_url'], width=200)
-        st.image(leading_candidate['photo_url'], width=220, caption=f"{leading_candidate['candi_name']}")
+        # Display statistics and visualizations
+        st.markdown("<hr style='margin: 0; border: 1px solid #ffffff;' />",unsafe_allow_html=True)
+        st.header('Statistics')
+        results = results[['candi_id', 'candi_name', 'party_affiliation', 'Total_Votes']].reset_index(drop=True)
 
-    with col2:
-        st.markdown("<h2 style='text-align: center; color: #FFFF; margin: 0;'>Candidate Name</h2>",unsafe_allow_html=True)
-        st.markdown(f"<h3 style='text-align: center; color: #FFFF; margin: 0;'><strong>{leading_candidate['candi_name']}</strong></h3>",unsafe_allow_html=True)
-        st.markdown(f"<h4 style='text-align: center; color: #FFFF;'>The Leading Party <br><strong>{leading_candidate['party_affiliation']}</strong></h4>",unsafe_allow_html=True)        # st.subheader(f"The Leading Party:\n{leading_candidate['party_affiliation']}")
-        st.markdown(f"<h4 style='text-align: center; color: #FFF15;'>Total Votes:<br><strong>{leading_candidate['Total_Votes']}</strong></h4>",unsafe_allow_html=True)        # st.subheader(f"Total Vote: {leading_candidate['Total_Votes']}")
+        # results = results.reset_index(drop=True)
+        col1, col2 = st.columns(2)
+        # Display bar chart and donut chart
+        with col1:
+            bar_fig = plot_colored_bar_chart(results,bar_orientation='vertical',color_map='Set3')
+            st.pyplot(bar_fig)
 
-    # Display statistics and visualizations
-    st.markdown("<hr style='margin: 0; border: 1px solid #ffffff;' />",unsafe_allow_html=True)
-    st.header('Statistics')
-    results = results[['candi_id', 'candi_name', 'party_affiliation', 'Total_Votes']].reset_index(drop=True)
+        with col2:
+            donut_fig = plot_donut_chart(results, title='Vote Distribution')
+            st.pyplot(donut_fig)
 
-    # results = results.reset_index(drop=True)
-    col1, col2 = st.columns(2)
-    # Display bar chart and donut chart
-    with col1:
-        bar_fig = plot_colored_bar_chart(results,bar_orientation='vertical',color_map='Set3')
-        st.pyplot(bar_fig)
+        # Display table with candidate statistics
+        st.markdown("### Election Results")
+        st.markdown("This table shows the total votes received by each candidate.")
+        results = results.sort_values(by='Total_Votes', ascending=False).reset_index(drop=True)
+        results.index = results.index +1
+        st.dataframe(results, use_container_width=True)
 
-    with col2:
-        donut_fig = plot_donut_chart(results, title='Vote Distribution')
-        st.pyplot(donut_fig)
+        # Fetch data from Kafka on aggregated turnout by location
+        # st.info("📍 Fetching location-based voter data...")
 
-    # Display table with candidate statistics
-    st.markdown("### Election Results")
-    st.markdown("This table shows the total votes received by each candidate.")
-    results = results.sort_values(by='Total_Votes', ascending=False).reset_index(drop=True)
-    results.index = results.index +1
-    st.dataframe(results, use_container_width=True)
+        location_consumer = create_kafka_consumer("agg_vote_count")
+        location_data = fetch_data_from_kafka(location_consumer)
+        location_result = pd.DataFrame(location_data)
 
-    # Fetch data from Kafka on aggregated turnout by location
-    location_consumer = create_kafka_consumer("agg_vote_count")
-    location_data = fetch_data_from_kafka(location_consumer)
-    location_result = pd.DataFrame(location_data)
+        # Identify locations with maximum turnout
+        location_result = location_result.loc[location_result.groupby('address[state]')['vote_count'].idxmax()].reset_index(drop=True)
+        # location_result = location_result.reset_index(drop=True)
 
-    # Identify locations with maximum turnout
-    location_result = location_result.loc[location_result.groupby('address[state]')['vote_count'].idxmax()].reset_index(drop=True)
-    # location_result = location_result.reset_index(drop=True)
+        # Display location-based voter information with pagination
+        st.markdown("<hr style='margin: 0; border: 1px solid #ffffff;' />",unsafe_allow_html=True)
+        st.header("Locations Voters")
+        paginate_table(location_result)
 
-    # Display location-based voter information with pagination
-    st.markdown("<hr style='margin: 0; border: 1px solid #ffffff;' />",unsafe_allow_html=True)
-    st.header("Locations Voters")
-    paginate_table(location_result)
+        # Update the last refresh time
+        st.session_state['last_update'] = time.time()
 
-    # Update the last refresh time
-    st.session_state['last_update'] = time.time()
+     # Clear any previous error messages
+        status_message.empty()
 
-# Sidebar layout
-# def sidebar():
-#     # Initialize last update time if not present in session state
-#     if st.session_state.get('last_update') is None:
-#         st.session_state['last_update'] = time.time()
+    except KeyError as e:
+        status_message.warning("⏳ Data is coming or processing... Please wait.")
 
-#     # Slider to control refresh interval
-#     refresh_interval = st.sidebar.slider("Refresh interval (seconds)", 5, 60, 10)
-#     st_autorefresh(interval=refresh_interval * 1000, key="auto")
+    except Exception as e:
+        status_message.error(f"⚠️ An unexpected error occurred: {e}")
 
-#     # Button to manually refresh data
-#     if st.sidebar.button('Refresh Data'):
-#         update_data()
+    # Sidebar layout
+    # def sidebar():
+    #     # Initialize last update time if not present in session state
+    #     if st.session_state.get('last_update') is None:
+    #         st.session_state['last_update'] = time.time()
+
+    #     # Slider to control refresh interval
+    #     refresh_interval = st.sidebar.slider("Refresh interval (seconds)", 5, 60, 10)
+    #     st_autorefresh(interval=refresh_interval * 1000, key="auto")
+
+    #     # Button to manually refresh data
+    #     if st.sidebar.button('Refresh Data'):
+    #         update_data()
 
 if __name__=="__main__":
 
@@ -384,8 +432,6 @@ if __name__=="__main__":
     # sidebar()
 
     # Automatic refresh logic in main area
-    st_autorefresh(interval=15000, key="auto_refresh")  # Refresh every 10 seconds
+    st_autorefresh(interval=10000, key="auto_refresh")  # Refresh every 10 seconds
     # Update and display data on the dashboard
     update_data()
-
-

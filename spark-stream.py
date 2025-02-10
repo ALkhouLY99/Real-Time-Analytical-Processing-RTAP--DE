@@ -1,9 +1,11 @@
 import os
 import shutil
+import signal
 import pyspark
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import *
 from pyspark.sql.types import StructType, StructField, StringType, IntegerType, MapType, TimestampType
+import sys
 
 # Spark set-up settings
 spark = SparkSession.builder \
@@ -28,6 +30,23 @@ def clear_checkpoint_directory(checkpoint_dir):
         print(f"Contents of checkpoint directory {checkpoint_dir} removed.")
     else:
         print("Checkpoint directory does not exist.")
+# Graceful shutdown handler
+def shutdown_handler(signum, frame):
+    print("\nReceived termination signal. Stopping Spark Streaming gracefully...")
+
+    if 'p_votres_per_candi_to_kafka' in globals() and p_votres_per_candi_to_kafka:
+        p_votres_per_candi_to_kafka.stop()
+    if 'p_trunout_loc_state_to_kafka' in globals() and p_trunout_loc_state_to_kafka:
+        p_trunout_loc_state_to_kafka.stop()
+
+    clear_checkpoint_directory("/workspaces/Voting-System-DE/checkpoints/cp1")
+    clear_checkpoint_directory("/workspaces/Voting-System-DE/checkpoints/cp2")
+
+    print("Stopping Spark session...")
+    spark.stop()
+
+    print("Cleanup completed. Exiting.")
+    sys.exit(0)  # Force exit
 
 if __name__ == "__main__":
     schema = StructType([
@@ -71,6 +90,10 @@ if __name__ == "__main__":
 
     trunout_loc_state = watermark_ebriched.groupby(col("address").getItem("state")) \
         .agg(count("*").alias("vote_count"))
+        
+        # Clear checkpoint directories at the start
+    # clear_checkpoint_directory("/workspaces/Voting-System-DE/checkpoints/cp1")
+    # clear_checkpoint_directory("/workspaces/Voting-System-DE/checkpoints/cp2")
 
     # Write to Kafka
     p_votres_per_candi_to_kafka = votres_per_candi.select(to_json(struct("*")).alias("value")) \
@@ -91,22 +114,16 @@ if __name__ == "__main__":
         .outputMode('update') \
         .start()
 
+        # Register signal handlers for SIGINT (Ctrl+C) and SIGTERM
+    signal.signal(signal.SIGINT, shutdown_handler)
+    signal.signal(signal.SIGTERM, shutdown_handler)
+
     try:
-        # Start the streaming queries
+        # Start streaming queries and wait for termination
         p_votres_per_candi_to_kafka.awaitTermination()
         p_trunout_loc_state_to_kafka.awaitTermination()
     except KeyboardInterrupt:
-        print("Streaming terminated by user.")
+        shutdown_handler(signal.SIGINT, None)
     except Exception as e:
         print(f"An error occurred: {e}")
-    finally:
-        # Stop the streaming queries gracefully
-        print("Stopping streaming queries...")
-        p_votres_per_candi_to_kafka.stop()
-        p_trunout_loc_state_to_kafka.stop()
-
-        # Clear the contents of the checkpoint directories
-        print("Clearing checkpoint directories...")
-        clear_checkpoint_directory("/workspaces/Voting-System-DE/checkpoints/cp1")
-        clear_checkpoint_directory("/workspaces/Voting-System-DE/checkpoints/cp2")
-        print("Checkpoint directories cleared.")
+        shutdown_handler(signal.SIGTERM, None)
