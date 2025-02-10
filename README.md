@@ -1,7 +1,8 @@
 # 🗳️ Real-Time Analytics Platform (RTAP) 
 ![with_actons_streaming_process_](https://github.com/user-attachments/assets/bdf128e2-22e0-4690-a719-26d4e93eea89)
 
-**This document provides a comprehensive overview of the Real-Time Analytical Processing (RTAP) Election Analytics Platform. It covers the architecture, technologies, workflows, features, setup, and future enhancements of the project.**
+**📌 About the RTAP Election Analytics Platform
+This document provides a comprehensive insight into the Real-Time Analytical Processing (RTAP) Election Analytics Platform. It covers the architecture, technologies, workflows, key features, setup, and future enhancements..**
 
 ## 🚀 Overview
 This project is a **real-time analytics platform** that processes and visualizes data for UK candidates and voters. It integrates **Apache Spark, Kafka, PostgreSQL, Prometheus, Grafana, and Streamlit** to ensure **scalability, efficiency, and insightful data visualization**.
