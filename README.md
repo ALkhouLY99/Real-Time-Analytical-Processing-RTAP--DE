@@ -78,7 +78,4 @@ make clean      # Remove all containers and volumes
 
 ---
 
-## 📜 License
-This project is licensed under the MIT License.
-
 💡 **Built with passion for real-time analytics & data-driven decision-making!** 🚀
