@@ -6,6 +6,7 @@ from pyspark.sql import SparkSession
 from pyspark.sql.functions import *
 from pyspark.sql.types import StructType, StructField, StringType, IntegerType, MapType, TimestampType
 import sys
+import atexit
 
 # Spark set-up settings
 spark = SparkSession.builder \
@@ -30,10 +31,11 @@ def clear_checkpoint_directory(checkpoint_dir):
         print(f"Contents of checkpoint directory {checkpoint_dir} removed.")
     else:
         print("Checkpoint directory does not exist.")
-# Graceful shutdown handler
-def shutdown_handler(signum, frame):
-    print("\nReceived termination signal. Stopping Spark Streaming gracefully...")
 
+
+def cleanup():
+    print("Cleaning up before exit...")
+    
     if 'p_votres_per_candi_to_kafka' in globals() and p_votres_per_candi_to_kafka:
         p_votres_per_candi_to_kafka.stop()
     if 'p_trunout_loc_state_to_kafka' in globals() and p_trunout_loc_state_to_kafka:
@@ -41,7 +43,24 @@ def shutdown_handler(signum, frame):
 
     clear_checkpoint_directory("/workspaces/Voting-System-DE/checkpoints/cp1")
     clear_checkpoint_directory("/workspaces/Voting-System-DE/checkpoints/cp2")
+    
+    print("Cleanup completed.")
 
+atexit.register(cleanup)  # This ensures cleanup even if an exception occurs
+
+# Graceful shutdown handler
+def shutdown_handler(signum, frame):
+    print("\nReceived termination signal. Stopping Spark Streaming gracefully...")
+    cleanup()
+    # if 'p_votres_per_candi_to_kafka' in globals() and p_votres_per_candi_to_kafka:
+    #     p_votres_per_candi_to_kafka.stop()
+    # if 'p_trunout_loc_state_to_kafka' in globals() and p_trunout_loc_state_to_kafka:
+    #     p_trunout_loc_state_to_kafka.stop()
+
+    # clear_checkpoint_directory("/workspaces/Voting-System-DE/checkpoints/cp1")
+    # clear_checkpoint_directory("/workspaces/Voting-System-DE/checkpoints/cp2")
+
+    time.sleep(3)  # Give Spark time to release resources
     print("Stopping Spark session...")
     spark.stop()
 
