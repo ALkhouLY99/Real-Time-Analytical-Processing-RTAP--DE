@@ -1,4 +1,4 @@
-# 🗳️ Election Analytics Platform (RTAP)
+# 🗳️ Real-Time Analytics Platform (RTAP) 
 ![with_actons_streaming_process_](https://github.com/user-attachments/assets/bdf128e2-22e0-4690-a719-26d4e93eea89)
 
 **This document provides a comprehensive overview of the Real-Time Analytical Processing (RTAP) Election Analytics Platform. It covers the architecture, technologies, workflows, features, setup, and future enhancements of the project.**
@@ -17,22 +17,23 @@ This project is a **real-time analytics platform** that processes and visualizes
 
 ## 🔹 System Architecture
 📡 Data Flow Overview
+
 1- Data Ingestion:
 
-+ Real-time voting data is fetched from an API.
-+ Data is sent to Kafka topics for efficient distribution.
+  + Real-time voting data is fetched from an API.
+  + Data is sent to Kafka topics for efficient distribution.
 2- Streaming Processing:
 
-+ Apache Spark consumes data from Kafka topics.
-+ Data is cleaned, transformed, and aggregated in real time.
+  + Apache Spark consumes data from Kafka topics.
+  + Data is cleaned, transformed, and aggregated in real time.
 3- Storage & Analytics:
 
-+ Processed data is stored in PostgreSQL for historical analysis.
-+ Metrics are collected by Prometheus for performance monitoring.
+  + Processed data is stored in PostgreSQL for historical analysis.
+  + Metrics are collected by Prometheus for performance monitoring.
 4- Visualization & Monitoring:
 
-+ Streamlit Dashboard displays live analytics on voter turnout & candidate rankings.
-+ Grafana monitors system performance & Kafka queue health.
+  + Streamlit Dashboard displays live analytics on voter turnout & candidate rankings.
+  +  Grafana monitors system performance & Kafka queue health.
 
 ---
 
