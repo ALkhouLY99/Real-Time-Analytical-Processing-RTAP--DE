@@ -16,7 +16,7 @@ This project is a **real-time election analytics platform** that processes and v
 ---
 
 ## 🔄 Workflow
-1. **Data Ingestion:** The system fetches real-time voting data from an external API.
+1. **Data Ingestion:** The system fetches real-time voting data from an `external API`.
 2. **Streaming Pipeline:** `Apache Kafka` queues and distributes the data efficiently.
 3. **Processing Layer:** `Spark processes` and transforms the data for aggregation and analysis.
 4. **Storage:** Cleaned data is stored in a `PostgreSQL` database.
@@ -51,7 +51,7 @@ Clone the repository and navigate to the project directory:
 git clone https://github.com/ALkhouLY99/Real-Time-Analytical-Processing-RTAP--DE.git
 cd Real-Time-Analytical-Processing-RTAP--DE
 create enviroment & activate it
-then run --> pip install -r requirements.txt
+then run  pip install -r requirements.txt
 ```
 
 Use the **Makefile** for easy management:
