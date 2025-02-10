@@ -48,8 +48,10 @@ Ensure you have the following installed:
 ### 🛠️ Installation
 Clone the repository and navigate to the project directory:
 ```sh
-git clone https://github.com/your-repo/voting-analytics.git
-cd voting-analytics
+git clone https://github.com/ALkhouLY99/Real-Time-Analytical-Processing-RTAP--DE.git
+cd Real-Time-Analytical-Processing-RTAP--DE
+create enviroment & activate it
+then run --> pip install -r requirements.txt
 ```
 
 Use the **Makefile** for easy management:
@@ -62,14 +64,6 @@ make clean      # Remove all containers and volumes
 ```
 
 ---
-
-## 📺 Dashboard Previews
-### 📌 Live Election Insights
-![Streamlit Dashboard](assets/streamlit_dashboard.png)
-
-### 📌 Vote Distribution Monitoring
-![Grafana Metrics](assets/grafana_metrics.png)
-
 ---
 
 ## 💡 Future Enhancements
