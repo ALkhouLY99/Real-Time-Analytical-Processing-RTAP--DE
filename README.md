@@ -62,7 +62,6 @@ make stop       # Stop all services
 make logs       # View logs
 make clean      # Remove all containers and volumes
 ```
-
 ---
 ---
 
