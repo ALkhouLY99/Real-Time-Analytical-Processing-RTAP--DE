@@ -6,23 +6,23 @@
 This project is a **real-time election analytics platform** that processes and visualizes voting data for UK candidates and voters. It integrates **Apache Spark, Kafka, PostgreSQL, Prometheus, Grafana, and Streamlit** to ensure **scalability, efficiency, and insightful data visualization**.
 
 ## 🏗️ Tech Stack
-- **📡 Data Ingestion:** API-based streaming source
-- **🔥 Data Processing:** Apache Spark
-- **📨 Messaging Queue:** Apache Kafka
-- **🗄️ Database Storage:** PostgreSQL
-- **📊 Monitoring:** Prometheus & Grafana
-- **🎨 Frontend Dashboard:** Streamlit
-- **⚙️ Automation & Management:** Makefile
+- **📡 Data Ingestion:** `API-based streaming source`
+- **🔥 Data Processing:** `Apache Spark`
+- **📨 Messaging Queue:** `Apache Kafka`
+- **🗄️ Database Storage:** `PostgreSQL`
+- **📊 Monitoring:** `Prometheus` & `Grafana`
+- **🎨 Frontend Dashboard:** `Streamlit`
+- **⚙️ Automation & Management:** `Makefile`
 
 ---
 
 ## 🔄 Workflow
 1. **Data Ingestion:** The system fetches real-time voting data from an external API.
-2. **Streaming Pipeline:** Apache Kafka queues and distributes the data efficiently.
-3. **Processing Layer:** Spark processes and transforms the data for aggregation and analysis.
-4. **Storage:** Cleaned data is stored in a PostgreSQL database.
-5. **Monitoring:** Prometheus collects system metrics, and Grafana visualizes performance.
-6. **Visualization Dashboard:** Streamlit presents live analytics on voter turnout, candidate rankings, and more.
+2. **Streaming Pipeline:** `Apache Kafka` queues and distributes the data efficiently.
+3. **Processing Layer:** `Spark processes` and transforms the data for aggregation and analysis.
+4. **Storage:** Cleaned data is stored in a `PostgreSQL` database.
+5. **Monitoring:** `Prometheus` collects system metrics, and `Grafana` visualizes performance.
+6. **Visualization Dashboard:** `Streamlit` presents live analytics on voter turnout, candidate rankings, and more.
 
 ---
 
