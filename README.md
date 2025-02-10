@@ -1,5 +1,7 @@
 # 🗳️ UK Election Analytics Platform
 
+![with_actons_streaming_process_](https://github.com/user-attachments/assets/ba33e857-d838-4299-b87e-257789931d54)
+
 ## 🚀 Overview
 This project is a **real-time election analytics platform** that processes and visualizes voting data for UK candidates and voters. It integrates **Apache Spark, Kafka, PostgreSQL, Prometheus, Grafana, and Streamlit** to ensure **scalability, efficiency, and insightful data visualization**.
 
