@@ -1,4 +1,5 @@
 # 🗳️ Election Analytics Platform (RTAP)
+This document provides a comprehensive overview of the Real-Time Analytical Processing (RTAP) Election Analytics Platform. It covers the architecture, technologies, workflows, features, setup, and future enhancements of the project.
 ![with_actons_streaming_process_](https://github.com/user-attachments/assets/bdf128e2-22e0-4690-a719-26d4e93eea89)
 
 ## 🚀 Overview
