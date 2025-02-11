@@ -50,7 +50,6 @@ This project is a **real-time analytics platform** that processes and visualizes
 6. **Visualization Dashboard:** `Streamlit` presents live analytics on voter turnout, candidate rankings, and more.
 ---
 # 📌 Workflow Breakdown
-
 ## 1️⃣ External APIs → PostgreSQL  
 ✅ Stores structured data for historical analysis, audits, and batch queries.  
 ✅ Ensures raw data is available even if Kafka fails.  
@@ -70,7 +69,7 @@ This project is a **real-time analytics platform** that processes and visualizes
 ✅ Visualizes system performance, alerts, and metrics dashboards.  
 ✅ Helps track system stability and potential bottlenecks.
 ---
-
+---
 ## 📊 Key Features
 ✅ **Real-time vote tracking** with Kafka & Spark  
 ✅ **Live candidate leaderboards** using Streamlit  
