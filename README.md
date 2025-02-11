@@ -54,23 +54,18 @@ This project is a **real-time analytics platform** that processes and visualizes
 ## 1️⃣ External APIs → PostgreSQL  
 ✅ Stores structured data for historical analysis, audits, and batch queries.  
 ✅ Ensures raw data is available even if Kafka fails.  
-
 ## 2️⃣ External APIs → Kafka  
 ✅ Enables real-time streaming for low-latency data processing.  
 ✅ Distributes messages efficiently across consumers.  
-
 ## 3️⃣ Kafka → Spark  
 ✅ Processes and transforms raw streaming data.  
 ✅ Supports real-time aggregations, filtering, and transformations.  
-
 ## 4️⃣ Spark → Streamlit  
 ✅ Provides live statistical analysis and real-time election insights.  
 ✅ Ensures an interactive and engaging visualization layer.  
-
 ## 5️⃣ Kafka → Prometheus  
 ✅ Monitors Kafka health, consumer lag, broker metrics, and message throughput.  
 ✅ Ensures smooth performance with real-time alerting.  
-
 ## 6️⃣ Prometheus → Grafana  
 ✅ Visualizes system performance, alerts, and metrics dashboards.  
 ✅ Helps track system stability and potential bottlenecks.
